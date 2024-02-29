@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Pixel Battle</title>
+<script src="/cdn-cgi/apps/head/Wg-cHKvx6Q7S8DJggMaznCicJb0.js"></script><style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #efefef;
+      }
+      canvas {
+        background-color: #fff;
+        box-shadow: 0 0 5px 0 rgba(50, 50, 50, 0.3);
+      }
+    </style>
+</head>
+<body>
+<canvas height="500" width="800"></canvas>
+<script>
+      "use strict";
+
+      const API_ROOT = "http://localhost:8000";
+
+      let canvas = document.querySelector("canvas");
+      let ctx = canvas.getContext("2d");
+
+      // Обработка клика на canvas
+      canvas.addEventListener("click", function (e) {
+        // получаем координаты клика относительно canvas, а не окна
+        let clickX = e.clientX - canvas.getBoundingClientRect().left;
+        let clickY = e.clientY - canvas.getBoundingClientRect().top;
+
+        // отправить запрос скрипту setpoint.php
+        // с параметрами x=clickX и y=clickY
+        // (написать код самостоятельно)
+        let xhr = new XMLHttpRequest();
+        xhr.open(
+          "GET",
+          API_ROOT + "setpoint.php?x=" + clickX + "&y=" + clickY,
+          false
+        );
+        xhr.send();
+      });
+
+      //  создать интервал, который будет каждые 500мс:
+      //  - отправлять запрос скрипту points.php
+      //  - преобразовывать ответ из JSON-строки в массив объектов
+      //  - обходить полученный массив и рисовать точки при помощи функции drawPoint()
+      //  Точки отдаются в формате {
+      //    x: 10,
+      //    y: 10,
+      //    color: #123fea
+      //  }
+      let updInterval = setInterval(function () {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", API_ROOT + "points.php", false);
+        xhr.send();
+        if (xhr.status == 200) {
+          ctx.clearRect(0, 0, 10000, 10000);
+          let dotsArr = JSON.parse(xhr.responseText);
+          for (let dot of dotsArr) {
+            drawPoint(dot.x, dot.y, dot.color);
+          }
+        } else {
+          alert("Connection error!");
+        }
+      }, 200);
+
+      // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =================================================
+
+      // Рисование точки на canvas с заданными параметрами
+      function drawPoint(x, y, color) {
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+    </script>
+</body>
+</html>
